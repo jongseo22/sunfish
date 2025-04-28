@@ -1,9 +1,9 @@
-# 🌟 Sunfish
-[발표자료 다운로드 (PPT)](./files/sunfish.pdf)
+# 🐟 Sunfish
+[발표자료 다운로드 (PDF)](./files/sunfish.pdf)
 
-**Lightweight Traefik + Prometheus + Metrics API + Grafana 모닝 스택**
+**물리 자원 상태를 고려한 Dynamic Load Balancing**
 
-Docker Swarm 환경에서  
+Docker Swarm 환경에서 
 Traefik 리버스 프로시, Prometheus 메트릭 수집,  
 커스텀 Metrics API, Grafana 대시보드를  모두 통합 관리하는 가게화된 프로젝트입니다.
 
