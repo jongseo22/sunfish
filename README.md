@@ -21,8 +21,6 @@ Traefik으로 Load Balancing 하는 구조입니다.
 | **Metrics API** | Python Flask 기반 커스텀 메트릭 서버 |
 | **Traefik** | Swarm 기반 Reverse Proxy + Router |
 
----
-
 ```
 [ Client 요청 ]
      ↓ 
