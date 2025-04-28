@@ -16,10 +16,10 @@ Traefik으로 Load Balancing 하는 구조입니다.
 | Components | Description |
 |:---|:---|
 | **Node Exporter** | 서버 CPU, Memory, Disk 등 메트릭 수집기 |
-| **Prometheus** | Metrics 수집 및 모니터링 |
-| **Grafana** | 시각화 대시보드 |
+| **Prometheus** | Metrics 수집 및 모니터링 (데이터 1분 저장, 100MB 초과 시 reset) |
+| **Grafana** | 시각화 대시보드 자동생성 |
 | **Metrics API** | Python Flask 기반 커스텀 메트릭 서버 |
-| **Traefik** | Swarm 기반 Reverse Proxy + Router |
+| **Traefik** | Swarm 기반 Reverse Proxy + 동적 Router |
 
 ```
 [ Client 요청 ]
@@ -45,25 +45,19 @@ git clone https://github.com/jongseo22/sunfish.git
 cd sunfish
 ```
 
-### 2. Docker Swarm 초기화 (필요시)
-
-```bash
-docker swarm init
-```
-
-### 3. 배포
+### 2. 배포
 
 ```bash
 docker stack deploy -c docker-compose.yml sunfish
 ```
 
-### 4. 접속
+### 3. 접속
 
 | 기능 | 주소 |
 |:---|:---|
-| Traefik Web Proxy | `http://<서버IP>:8088/` |
-| Traefik Dashboard | `http://<서버IP>:8089/dashboard/` |
-| Grafana Dashboard | `http://<서버IP>:3000/` (처기 로그인: `admin`/`admin`) |
+| Grafana Dashboard | `http://<마스터서버IP>:3000/` (초기 로그인: `admin`/`admin`) |
+| Traefik Web Proxy | `http://<마스터서버IP>:8088/` |
+| Traefik Dashboard | `http://<마스터서버IP>:8089/dashboard/` |
 
 ---
 
@@ -73,71 +67,20 @@ docker stack deploy -c docker-compose.yml sunfish
 |:---|:---|
 | `docker-compose.yml` | 전체 서비스 정의 |
 | `prometheus.yml` | Prometheus scrape 설정 |
-| `metrics-api/` | Python Flask Metrics API 소스코드 |
-| `traefik/` | Traefik 동적 설정 (dynamic_conf.yml) |
-| `files/` | Grafana 설정(grafana.ini) 및 Provisioning 데이터 |
+| `files/grafana.ini` | Grafana 설정 데이터 |
 | `files/provisioning/datasources` | Prometheus Datasource 자동 등록 |
 | `files/provisioning/dashboards` | Grafana Dashboard JSON 저장소 |
+| `metrics-api/` | Python Flask Metrics API 소스코드 |
+| `traefik/` | Traefik 동적 설정 (dynamic_conf.yml) |
 
 ---
 
-## 📋 기능 정보
+## 🧹 TO-DO (개선 예정)
 
-- **Traefik**
-  - Swarm 서비스 자동 감지
-  - 동적 라우트 설정
-  - Dashboard 활성화 (8089 포트)
-- **Prometheus**
-  - Metrics API, Node Exporter 스크래프
-  - 데이터 1분 저장 / 100MB 초과 시 회전
-- **Grafana**
-  - Prometheus Datasource 자동 등록
-  - 대시보드 자동 생성
-- **Metrics API**
-  - `/metrics` 여러 커스텀 메트릭 제공
+- 물리자원 사용량에 따른 컨테이너 자동 migration 기능 추가
+- 다양한 어플리케이션에 적용시킬 수 있는 맞춤형 PromQL 구성
 
 ---
 
-## 🧰 환경변수
-
-- `TZ=Asia/Seoul` : 모든 컨테이너 시간대를 한국 시간(KST)으로 설정
-- `PYTHONUNBUFFERED=1` : Python 로그 시스템 출력 (로그 바라기없이)
-
----
-
-## 🧹 TODO (개정 예정)
-
-- HTTPS (Let's Encrypt) 자동 인증 연동
-- Traefik OAuth2 인증 추가
-- Grafana Alerting 기능 통합
-- Metrics API 확장 (더 다양한 메트릭 제공)
-
----
-
-## 📄 라이센스
-
-> 본 프로젝트는 아직 라이센스가 명시되어 있지 않습니다.  
-> 최종적으로 오프스 라이센스 (MIT, Apache 2.0 등) 추가 예정입니다.
-
----
-
-# 👌 기억하세요
-
-Pull Request, 이슈 환영합니다!  
-더 다른 건강한 Sunfish 프로젝트를 함께 만드어내요.
-
----
-
-# ✨
-
-> 가게화된 인프라 모닝을 원하는다면  
-> **Sunfish**와 함께라면 최고입니다. 🚀
-
----
-
-# 📎 추가
-
-- Grafana Default 계정: `admin/admin`
-- Traefik Dashboard는 인증 없이 가능하무로, 운영 환경에서는 비돼적 보호가 필요합니다.
-
----
+이슈 제기 언제든 환영입니다!
+더 나은 Sunfish 프로젝트를 함께 만들어보아요~
