@@ -1,4 +1,5 @@
 # 🌟 Sunfish
+[발표자료 다운로드 (PPT)](./files/sunfish.pdf)
 
 **Lightweight Traefik + Prometheus + Metrics API + Grafana 모닝 스택**
 
