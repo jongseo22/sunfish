@@ -26,18 +26,14 @@ Traefik으로 Load Balancing 하는 구조입니다.
 ```
 [ Client 요청 ]
      ↓ 
-[ Prometheus ]
- ├—— Metrics API (/metrics) 스크래프
- └—— Node Exporter 스크래프
+[ Prometheus / Grafana ]
+ ├—— Node Exporter 메트릭 수집
+ ├—— Prometheus query에 따른 물리자원 정보 수집
+ └—— Grafana 대시보드 자동 로딩
 
-[ Grafana ]
- ├—— Prometheus 데이터 소스로 연결
- └—— 대시보드 자동 로딩
-
-[ Traefik ]
- ├—— [ Metrics API (Flask) ]  (HTTP 요청 프로키)
- └—— [ Grafana Dashboard (/dashboard)]
-
+[ Metrics API / Traefik ]
+ ├—— Flask를 활용하여 best-node 정보 전달
+ └—— Traefik_conf 실시간 변동
 ```
 
 ---
