@@ -2,143 +2,148 @@ version: '3.7'
 
 services:
 
+###############################################
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    labels:
+      - "monitoring=true"
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+    command:
+      - '--path.rootfs=/host'   # /host 경로를 실제 호스트(rootfs)의 루트 디렉토리로 사용
+    ports:
+      - target: 9100
+        published: 9100
+        mode: host
+    volumes:
+      - /:/host:ro,rslave       # / (root 전체)를 컨테이너 내부 /host에 마운트
+    networks:
+      - monitor_network
+
+###############################################
+
   prometheus:
     image: prom/prometheus:latest
     user: root
-    ports:
-      - "9090:9090"
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]     # manager 노드에게만 prometheus 설치
     configs:
       - source: prometheus_config
         target: /etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.retention.time=1m'
-      - '--storage.tsdb.retention.size=100MB'
-    deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints: [node.role == manager]         # manager 노드에게만 prometheus 설치
+      - '--storage.tsdb.retention.time=1m'      # 메트릭 데이터 1분 저장 후 삭제
+      - '--storage.tsdb.retention.size=100MB'   # 메트릭 데이터 최대 100MB 저장
+    ports:
+      - "9090:9090"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - monitor_network
     environment:
-      - TZ=Asia/Seoul                               # 시간을 UST -> KST로 변경
+      - TZ=Asia/Seoul                           # 시간을 UST -> KST로 변경
 
-  node-exporter:
-    image: prom/node-exporter:latest
-    command:
-      - '--path.rootfs=/host'
-    volumes:
-      - /:/host:ro,rslave
-    deploy:
-      mode: global
-      placement:
-        constraints: [node.role == worker]
-    ports:
-      - target: 9100
-        published: 9100
-        mode: host
-    labels:
-      - "monitoring=true"
-    networks:
-      - monitor_network
+###############################################
 
   grafana:
     image: grafana/grafana:latest
-    
+    deploy:
+      restart_policy:
+        condition: on-failure   # 컨테이너 실패 시 재시작
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+    ports:
+      - 3000:3000
+    volumes:
+      - ./files/grafana.ini:/etc/grafana/grafana.ini   # ./files/grafana.ini : 메인 설정 파일
+      - ./files/provisioning/datasources:/etc/grafana/provisioning/datasources   # Datasource 자동 설정 디렉토리
+      - ./files/provisioning/dashboards:/etc/grafana/provisioning/dashboards   # Dashboard 정의 파일
+      - ./files/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards.yml   # Dashboard provisioning 매핑 파일
+      - grafana-data:/var/lib/grafana   # grafana 내부 데이터 저장소
+    networks:
+      - monitor_network
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - TZ=Asia/Seoul
-    ports:
-      - 3000:3000
-    volumes:
-      - ./files/grafana.ini:/etc/grafana/grafana.ini
-      - ./files/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./files/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-      - ./files/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards.yml
-      - grafana-data:/var/lib/grafana
-    deploy:
-      restart_policy:
-        condition: on-failure
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints: [node.role == manager]
-    logging:
+    logging:   # 로그 저장 방식
       driver: "json-file"
       options:
         max-size: "8m"
         max-file: "10"
-    networks:
-      - monitor_network
 
- 
-  traefik:
-    image: traefik:v2.10
-    command:
-      - --providers.docker.swarmmode=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.api.address=:8080
-      - --providers.file.filename=/etc/traefik/dynamic_conf.yml
-      - --providers.file.watch=true
-      - --api.dashboard=true
-      - --log.level=DEBUG
-    ports:
-      - "8088:80"      # 외부 8088 → Traefik 80 (웹 요청용)
-      - "8089:8080"    # 외부 8089 → Traefik 8080 (대시보드용)
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      #- ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml     # bind mount -> swarm에서는 인식 안 됨
-      - traefik-config:/etc/traefik                                   # named mount
-    deploy:
-      placement:
-        constraints: [node.role == manager]
-      replicas: 1
-    networks:
-      - monitor_network
-    environment:
-      - TZ=Asia/Seoul
-
+###############################################
 
   metrics-api:
     build:
       context: ./metrics-api
-    image: metrics-api:1.0
-    working_dir: /app
-    volumes:
-      - ./metrics-api:/app
-      #- ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml     # bind mount
-      - traefik-config:/etc/traefik                                   # named mount
+    image: metrics-api:latest
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    depends_on:
+      - prometheus
     ports:
       - target: 8000
         published: 8000
         mode: host
-    depends_on:
-      - prometheus
-    deploy:
-      placement:
-        constraints: [node.role == manager]
+    working_dir: /app
+    volumes:
+      - ./metrics-api:/app            # Bind mount
+      - traefik-config:/etc/traefik   # Named mount (Docker가 관리하는 자체 저장소 공간)
     networks:
       - monitor_network
     environment:
       - TZ=Asia/Seoul
-      - PYTHONUNBUFFERED=1          # 로그가 버퍼를 거쳐 출력되지 않고 즉시 출력되도록 설정 (로그 출력 지연 방지)
+      - PYTHONUNBUFFERED=1   # 로그가 버퍼를 거쳐 출력되지 않고 즉시 출력되도록 설정 (로그 출력 지연 방지)
 
+###############################################
+ 
+  traefik:
+    image: traefik:v2.10
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+    command:
+      - --providers.docker.swarmmode=true   # Docker Swarm 모드 지원
+      - --providers.docker.exposedbydefault=false   # traefik.enable=true 라벨 컨테이너만 관리
+      - --entrypoints.web.address=:80
+      - --entrypoints.api.address=:8080
+      - --providers.file.filename=/etc/traefik/dynamic_conf.yml   # dynamic_conf.yml 기반 동적 설정
+      - --providers.file.watch=true   # dynamic_conf.yml 실시간 감지
+      - --api.dashboard=true
+      - --log.level=DEBUG
+    ports:
+      - "8088:80"     # 외부 8088 → Traefik 80 (웹 요청용)
+      - "8089:8080"   # 외부 8089 → Traefik 8080 (대시보드용)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - traefik-config:/etc/traefik   # Named mount
+    networks:
+      - monitor_network
+    environment:
+      - TZ=Asia/Seoul
+
+###############################################
 
 volumes:
   grafana-data: {}
-  traefik-config: {}                # named mount를 위한 volumes 설정
+  traefik-config: {}   # Named mount를 위한 volumes 설정
 
 configs:
   prometheus_config:
     file: ./prometheus.yml
 
 networks:
-  monitor_network:                  # 서비스들이 서로 통신할 수 있도록 별도의 overlay 네트워크 정의
+  monitor_network:   # 서비스들이 서로 통신할 수 있도록 별도의 overlay 네트워크 정의
     driver: overlay
     attachable: true
-

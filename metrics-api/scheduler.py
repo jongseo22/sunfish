@@ -40,7 +40,7 @@ def get_best_node():
         print("[ERROR] Failed to fetch resource data from Prometheus.")
         return None
     
-    # CPU와 RAM을 고려한 node들의 가용 점수 계산
+    # CPU와 RAM 사용률을 고려한 node들의 가용 점수 계산
     scores = {}
 
     # CPU와 RAM에 대한 가중치 설정

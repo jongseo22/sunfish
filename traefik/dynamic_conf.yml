@@ -1,4 +1,6 @@
 http:
+
+  # 어떤 요청이 왔을 때 어떤 서비스로 보낼지
   routers:
     dynamic-router:
       rule: "PathPrefix(`/`)"
@@ -12,6 +14,7 @@ http:
       entryPoints:
         - api
 
+  # 실제 트래픽을 보낼 백엔드 서버
   services:
     dynamic-service:
       loadBalancer:
