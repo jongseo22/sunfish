@@ -1,5 +1,6 @@
 # 🐟 Sunfish
 [발표자료 다운로드 (PDF)](./files/sunfish.pdf)
+Notion: https://www.notion.so/5-1cacdde58aac808d95dacfc0c93a8ba0?pvs=4
 
 **물리 자원 상태를 고려한 Dynamic Load Balancing**
 
