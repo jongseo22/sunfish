@@ -23,9 +23,9 @@ Traefik으로 Load Balancing 하는 구조입니다.
 
 ---
 
+```
 [ Client 요청 ]
-     ↓
-
+     ↓ 
 [ Prometheus ]
  ├—— Metrics API (/metrics) 스크래프
  └—— Node Exporter 스크래프
@@ -33,6 +33,7 @@ Traefik으로 Load Balancing 하는 구조입니다.
 [ Grafana ]
  ├—— Prometheus 데이터 소스로 연결
  └—— 대시보드 자동 로딩
+
 [ Traefik ]
  ├—— [ Metrics API (Flask) ]  (HTTP 요청 프로키)
  └—— [ Grafana Dashboard (/dashboard)]
