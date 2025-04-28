@@ -82,5 +82,5 @@ docker stack deploy -c docker-compose.yml sunfish
 
 ---
 
-이슈 제기 언제든 환영입니다!
-더 나은 Sunfish 프로젝트를 함께 만들어보아요~
+이슈 제의 언제든 환영입니다!
+더 나은 Sunfish 프로젝트를 만들어보아요~
