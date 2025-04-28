@@ -11,27 +11,21 @@ Traefik으로 Load Balancing 하는 구조입니다.
 
 ---
 
-## 📦 프로젝트 구성
+## 📦 프로젝트 및 아키텍쳐 구성
 
-| 컨퍼니트 | 설명 |
+| Components | Description |
 |:---|:---|
-| **Traefik** | Swarm-aware Reverse Proxy + HTTP Router |
-| **Prometheus** | Metrics 수집 및 모닝 |
-| **Metrics API** | Python Flask 기반 커스텀 메트릭 서버 |
+| **Node Exporter** | 서버 CPU, Memory, Disk 등 메트릭 수집기 |
+| **Prometheus** | Metrics 수집 및 모니터링 |
 | **Grafana** | 시각화 대시보드 |
-| **Node Exporter** | 서버 CPU, Memory, Disk 메트릭 수집기 |
+| **Metrics API** | Python Flask 기반 커스텀 메트릭 서버 |
+| **Traefik** | Swarm 기반 Reverse Proxy + Router |
 
 ---
 
-## 📺 전체 아키텍쳐
-
-```
 [ Client 요청 ]
      ↓
-[ Traefik ]
- ├—— [ Metrics API (Flask) ]  (HTTP 요청 프로키)
- └—— [ Grafana Dashboard (/dashboard)]
- 
+
 [ Prometheus ]
  ├—— Metrics API (/metrics) 스크래프
  └—— Node Exporter 스크래프
@@ -39,6 +33,10 @@ Traefik으로 Load Balancing 하는 구조입니다.
 [ Grafana ]
  ├—— Prometheus 데이터 소스로 연결
  └—— 대시보드 자동 로딩
+[ Traefik ]
+ ├—— [ Metrics API (Flask) ]  (HTTP 요청 프로키)
+ └—— [ Grafana Dashboard (/dashboard)]
+
 ```
 
 ---
