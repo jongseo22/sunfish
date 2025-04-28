@@ -3,9 +3,11 @@
 
 **물리 자원 상태를 고려한 Dynamic Load Balancing**
 
-Docker Swarm 환경에서 
-Traefik 리버스 프로시, Prometheus 메트릭 수집,  
-커스텀 Metrics API, Grafana 대시보드를  모두 통합 관리하는 가게화된 프로젝트입니다.
+Docker Swarm 환경에서 각 노드의 CPU, RAM 등 물리자원 상태를 모니터링하고
+이에 따라 트래픽을 동적 분산시키는 Dynamic Load Balancing 프로젝트입니다.
+Node Exporter와 Prometheus로 메트릭을 수집하고 Grafana로 모니터링,
+그리고 자체 개발한 python script (Metrics API) 에 따라
+Traefik으로 Load Balancing 하는 구조입니다.
 
 ---
 
